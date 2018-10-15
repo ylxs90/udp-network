@@ -8,6 +8,7 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
+import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.MessageToMessageEncoder;
 import io.netty.util.CharsetUtil;
 import org.junit.Test;
@@ -29,15 +30,14 @@ public class UDPClientTest {
                     @Override
                     protected void initChannel(NioDatagramChannel nioDatagramChannel) {
                         nioDatagramChannel.pipeline().addLast(new MyUdpEncoder());   //3.4在pipeline中加入编码器
+                        nioDatagramChannel.pipeline().addLast(new MyUdpDecoder());
+                        nioDatagramChannel.pipeline().addLast(new ClientHandler());
                     }
 
-                    @Override
-                    public void channelRead(ChannelHandlerContext ctx, Object msg) {
-                        System.out.println(msg.getClass());
-                    }
                 });
         Channel channel = bootstrap.bind(9002).sync().channel();
         channel.writeAndFlush("hello").sync();
+
         channel.closeFuture().sync();
         //7.关闭group
 
@@ -54,6 +54,14 @@ public class UDPClientTest {
             buf.writeBytes(bytes);
             DatagramPacket packet = new DatagramPacket(buf, remoteAddress);
             list.add(packet);
+        }
+    }
+
+    private static class MyUdpDecoder extends MessageToMessageDecoder<DatagramPacket> {
+
+        @Override
+        protected void decode(ChannelHandlerContext ctx, DatagramPacket msg, List<Object> out) {
+            out.add(msg.content().toString(CharsetUtil.UTF_8));
         }
     }
 }
