@@ -1,5 +1,7 @@
 package test;
 
+import c.s.l.network.udp.Message;
+import c.s.l.network.udp.util.JsonUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
@@ -35,21 +37,21 @@ public class UDPClientTest {
                     }
 
                 });
-        Channel channel = bootstrap.bind(9002).sync().channel();
-        channel.writeAndFlush("hello").sync();
-
+        Channel channel = bootstrap.bind(9007).sync().channel();
+        channel.writeAndFlush(Message.builder().cmd(1).msg("hello").data("hello").build()).sync();
         channel.closeFuture().sync();
         //7.关闭group
 
     }
 
-    private static class MyUdpEncoder extends MessageToMessageEncoder<String> {
+    private static class MyUdpEncoder extends MessageToMessageEncoder<Message> {
         //这里是广播的地址和端口
         private InetSocketAddress remoteAddress = new InetSocketAddress("localhost", 9001);
 
         @Override
-        protected void encode(ChannelHandlerContext channelHandlerContext, String s, List<Object> list) {
-            byte[] bytes = s.getBytes(CharsetUtil.UTF_8);
+        protected void encode(ChannelHandlerContext channelHandlerContext, Message msg, List<Object> list) {
+            String json = JsonUtil.serialize(msg);
+            byte[] bytes = json.getBytes();
             ByteBuf buf = channelHandlerContext.alloc().buffer(bytes.length);
             buf.writeBytes(bytes);
             DatagramPacket packet = new DatagramPacket(buf, remoteAddress);
@@ -61,7 +63,7 @@ public class UDPClientTest {
 
         @Override
         protected void decode(ChannelHandlerContext ctx, DatagramPacket msg, List<Object> out) {
-            out.add(msg.content().toString(CharsetUtil.UTF_8));
+            out.add(JsonUtil.deserialize(msg.content().toString(CharsetUtil.UTF_8), Message.class));
         }
     }
 }

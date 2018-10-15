@@ -1,12 +1,13 @@
 package test;
 
+import c.s.l.network.udp.Message;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
-public class ClientHandler extends SimpleChannelInboundHandler<String> {
-    @Override
-    protected void channelRead0(ChannelHandlerContext ctx, String msg) {
-        System.out.println(msg);
+public class ClientHandler extends SimpleChannelInboundHandler<Message> {
 
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, Message msg) {
+        System.out.println(msg);
     }
 }
