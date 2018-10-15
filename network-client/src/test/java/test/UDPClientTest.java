@@ -1,6 +1,7 @@
 package test;
 
 import c.s.l.network.udp.Message;
+import c.s.l.network.udp.cmd.NetworkCMD;
 import c.s.l.network.udp.util.JsonUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
@@ -37,8 +38,16 @@ public class UDPClientTest {
                     }
 
                 });
-        Channel channel = bootstrap.bind(9007).sync().channel();
-        channel.writeAndFlush(Message.builder().cmd(1).msg("hello").data("hello").build()).sync();
+
+        String rootId = "123123";
+        Channel channel = bootstrap.bind(9010).sync().channel();
+        channel.writeAndFlush(Message.builder().cmd(1).msg(rootId).userId(1).cmd(NetworkCMD.register).build()).sync();
+
+        channel.writeAndFlush(Message.builder().cmd(1).msg(rootId).data("hello").userId(1).cmd(NetworkCMD.msg).build()).sync();
+        channel.writeAndFlush(Message.builder().cmd(1).msg(rootId).data("nice to me you").userId(1).cmd(NetworkCMD.msg).build()).sync();
+        channel.writeAndFlush(Message.builder().cmd(1).msg(rootId).data("mee too").userId(1).cmd(NetworkCMD.msg).build()).sync();
+
+
         channel.closeFuture().sync();
         //7.关闭group
 

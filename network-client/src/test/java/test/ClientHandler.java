@@ -8,6 +8,6 @@ public class ClientHandler extends SimpleChannelInboundHandler<Message> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) {
-        System.out.println(msg);
+        System.out.println(String.format("[%d]: %s", msg.getUserId(), msg.getData()));
     }
 }
