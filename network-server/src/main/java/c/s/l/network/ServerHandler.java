@@ -3,6 +3,7 @@ package c.s.l.network;
 import c.s.l.network.udp.Message;
 import c.s.l.network.udp.cmd.NetworkCMD;
 import c.s.l.network.udp.util.JsonUtil;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -15,7 +16,7 @@ import java.util.Set;
 
 public class ServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 
-    private GameRoom gameRoom = null;
+    private GameRoom gameRoom;
 
     public ServerHandler(GameRoom room) {
         this.gameRoom = room;
@@ -24,39 +25,43 @@ public class ServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket msg) {
-        gameRoom.addUser("123", msg.sender());
         Message message = JsonUtil.deserialize(msg.content().toString(CharsetUtil.UTF_8), Message.class);
-        System.out.println(message);
+        System.out.println(String.format("from %s:%s", msg.sender().getHostName(), msg.sender().getPort()));
+
 
         if (message.getCmd() == NetworkCMD.register) {
-            gameRoom.addUser(message.getMsg(), msg.sender());
+            gameRoom.addUser(message.getMsg(), message.getUserId(), msg.sender());
             DatagramPacket packet = new DatagramPacket(Unpooled.copiedBuffer(JsonUtil.serialize(Message.builder().userId(0).data("connected").build()), CharsetUtil.UTF_8), msg.sender());
             ctx.writeAndFlush(packet);
             return;
         }
         if (message.getCmd() == NetworkCMD.msg) {
             Set<SocketAddress> users = gameRoom.getUsers(message.getMsg());
-            System.out.println(String.format("from %s:%s", msg.sender().getHostName(), msg.sender().getPort()));
 
-            users.stream().filter(it -> it != msg.sender()).forEach(it -> {
-                DatagramPacket packet = new DatagramPacket(msg.content(),
+
+            users.stream().filter(it -> !it.equals(msg.sender())).forEach(it -> {
+                System.out.println(String.format("send to %s", it.toString()));
+                DatagramPacket packet = new DatagramPacket(msg.content().retain(),
                         (InetSocketAddress) it);
                 ctx.writeAndFlush(packet);
             });
         }
         if (message.getCmd() == NetworkCMD.close) {
             DatagramPacket packet = new DatagramPacket(Unpooled.copiedBuffer(JsonUtil.serialize(
-                    Message.builder().userId(0).msg("close").build()),
-                    CharsetUtil.UTF_8), msg.sender());
+                    Message.builder().userId(0).data("you left...").build()
+            ), CharsetUtil.UTF_8), msg.sender());
             ctx.writeAndFlush(packet);
             Set<SocketAddress> users = gameRoom.getUsers(message.getMsg());
-            users.stream().filter(it -> it != msg.sender()).forEach(it -> {
-                DatagramPacket p = new DatagramPacket(Unpooled.copiedBuffer(JsonUtil.serialize(
-                        Message.builder().userId(message.getUserId()).data("I'm leave").build()
-                ), CharsetUtil.UTF_8), (InetSocketAddress) it);
+
+            ByteBuf data = Unpooled.copiedBuffer(JsonUtil.serialize(
+                    Message.builder().userId(message.getUserId()).data("I'm leave").build()
+            ), CharsetUtil.UTF_8);
+            System.out.println(users);
+            users.stream().filter(it -> !it.equals(msg.sender())).forEach(it -> {
+                System.out.println(String.format("send to %s", it.toString()));
+                DatagramPacket p = new DatagramPacket(data.retain(), (InetSocketAddress) it);
                 ctx.writeAndFlush(p);
             });
-            ctx.close();
         }
 
     }

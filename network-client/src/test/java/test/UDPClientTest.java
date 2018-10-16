@@ -17,15 +17,22 @@ import io.netty.handler.codec.MessageToMessageEncoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.util.CharsetUtil;
-import org.junit.Test;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.Random;
 
 public class UDPClientTest {
 
-    @Test
-    public void test() throws InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException {
+        new UDPClientTest().test();
+    }
+
+
+    public void test() throws InterruptedException, IOException {
         NioEventLoopGroup group = new NioEventLoopGroup();
         //2.启动器
         Bootstrap bootstrap = new Bootstrap();
@@ -47,13 +54,24 @@ public class UDPClientTest {
 
                 });
 
-        String rootId = "123123";
-        Channel channel = bootstrap.bind(9010).sync().channel();
-        channel.writeAndFlush(Message.builder().cmd(1).msg(rootId).userId(1).cmd(NetworkCMD.register).build()).sync();
+        String roomId = "123123";
+        int userId = new Random().nextInt(100);
+        Channel channel = bootstrap.bind(9000 + userId).sync().channel();
+        channel.writeAndFlush(Message.builder().msg(roomId).userId(userId).cmd(NetworkCMD.register).build()).sync();
 
-        channel.writeAndFlush(Message.builder().cmd(1).msg(rootId).data("hello").userId(1).cmd(NetworkCMD.msg).build()).sync();
-        channel.writeAndFlush(Message.builder().cmd(1).msg(rootId).data("nice to me you").userId(1).cmd(NetworkCMD.msg).build()).sync();
-        channel.writeAndFlush(Message.builder().cmd(1).msg(rootId).data("mee too").userId(1).cmd(NetworkCMD.msg).build()).sync();
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
+
+        while (true) {
+            String msg;
+            if ((msg = bufferedReader.readLine()) != null) {
+                if (msg.equals("quit")) {
+                    channel.writeAndFlush(Message.builder().msg(roomId).userId(userId).cmd(NetworkCMD.close).build()).channel().closeFuture().await(3000);
+                    group.shutdownGracefully();
+                    break;
+                }
+                channel.writeAndFlush(Message.builder().msg(roomId).data(msg).userId(userId).cmd(NetworkCMD.msg).build()).sync();
+            }
+        }
 
 
         channel.closeFuture().sync();
