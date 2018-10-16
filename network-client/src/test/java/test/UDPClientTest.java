@@ -8,11 +8,14 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.MessageToMessageEncoder;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
 import io.netty.util.CharsetUtil;
 import org.junit.Test;
 
@@ -32,9 +35,14 @@ public class UDPClientTest {
                 .handler(new ChannelInitializer<NioDatagramChannel>() {
                     @Override
                     protected void initChannel(NioDatagramChannel nioDatagramChannel) {
-                        nioDatagramChannel.pipeline().addLast(new MyUdpEncoder());   //3.4在pipeline中加入编码器
-                        nioDatagramChannel.pipeline().addLast(new MyUdpDecoder());
-                        nioDatagramChannel.pipeline().addLast(new ClientHandler());
+
+
+                        ChannelPipeline pipeline = nioDatagramChannel.pipeline();
+                        pipeline.addLast(new StringDecoder());
+                        pipeline.addLast(new StringEncoder());
+                        pipeline.addLast(new MyUdpEncoder());   //3.4在pipeline中加入编码器
+                        pipeline.addLast(new MyUdpDecoder());
+                        pipeline.addLast(new ClientHandler());
                     }
 
                 });
@@ -75,5 +83,7 @@ public class UDPClientTest {
             out.add(JsonUtil.deserialize(msg.content().toString(CharsetUtil.UTF_8), Message.class));
         }
     }
+
+
 }
 
