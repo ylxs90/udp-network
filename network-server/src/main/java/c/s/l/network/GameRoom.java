@@ -3,7 +3,6 @@ package c.s.l.network;
 import lombok.*;
 
 import java.net.SocketAddress;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,7 +21,12 @@ public class GameRoom {
             tables.put(uid, list);
             return result;
         } else {
-            return users.add(User.builder().id(userId).address(user).build());
+            User u = User.builder().id(userId).address(user).build();
+            if (!users.add(u)) {
+                users.remove(u);
+                users.add(u);
+            }
+            return true;
         }
     }
 

@@ -2,10 +2,11 @@ package c.s.l.network.udp.cmd;
 
 public interface NetworkCMD {
 
-    int close = -1;
-    int register = 1;
-    int msg = 2;
-    int reConnect = 3;
+    byte CLOSE = -1;
+    byte REGISTER = 1;
+    byte MSG = 2;
+    byte RE_CONNECT = 3;
+    byte HEART_BLOOD = -100;
 
 
 }

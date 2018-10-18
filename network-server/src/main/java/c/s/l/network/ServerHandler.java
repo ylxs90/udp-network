@@ -29,13 +29,13 @@ public class ServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
         System.out.println(String.format("from %s:%s", msg.sender().getHostName(), msg.sender().getPort()));
 
 
-        if (message.getCmd() == NetworkCMD.register) {
+        if (message.getCmd() == NetworkCMD.REGISTER) {
             gameRoom.addUser(message.getMsg(), message.getUserId(), msg.sender());
             DatagramPacket packet = new DatagramPacket(Unpooled.copiedBuffer(JsonUtil.serialize(Message.builder().userId(0).data("connected").build()), CharsetUtil.UTF_8), msg.sender());
             ctx.writeAndFlush(packet);
             return;
         }
-        if (message.getCmd() == NetworkCMD.msg) {
+        if (message.getCmd() == NetworkCMD.MSG) {
             Set<SocketAddress> users = gameRoom.getUsers(message.getMsg());
 
 
@@ -46,7 +46,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
                 ctx.writeAndFlush(packet);
             });
         }
-        if (message.getCmd() == NetworkCMD.close) {
+        if (message.getCmd() == NetworkCMD.CLOSE) {
             DatagramPacket packet = new DatagramPacket(Unpooled.copiedBuffer(JsonUtil.serialize(
                     Message.builder().userId(0).data("you left...").build()
             ), CharsetUtil.UTF_8), msg.sender());

@@ -13,7 +13,8 @@ import java.io.Serializable;
 @NoArgsConstructor
 public class Message implements Serializable {
 
-    private int cmd;
+    private static final long serialVersionUID = -5193133261732526643L;
+    private byte cmd;
     private int userId;
     private String msg;
     private String data;
