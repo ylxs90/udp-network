@@ -1,3 +1,6 @@
+apply plugin: "application"
+mainClassName = "c.s.l.network.Main"
+
 dependencies {
     compile project(":network-stub")
 }
