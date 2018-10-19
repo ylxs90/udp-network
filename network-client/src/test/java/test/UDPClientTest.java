@@ -18,21 +18,34 @@ import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.util.CharsetUtil;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class UDPClientTest {
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-        new UDPClientTest().test();
+    public static void main(String[] args) {
+
+        ExecutorService service = Executors.newFixedThreadPool(10);
+        for (int i = 1; i < 10000; i++) {
+
+            int finalI = i;
+            service.submit(() -> {
+                try {
+                    new UDPClientTest().test(finalI);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
+
     }
 
 
-
-    public void test() throws InterruptedException, IOException {
+    public void test(int userId) throws InterruptedException {
         NioEventLoopGroup group = new NioEventLoopGroup();
         //2.启动器
         Bootstrap bootstrap = new Bootstrap();
@@ -55,24 +68,28 @@ public class UDPClientTest {
                 });
 
         String roomId = "123123";
-        int userId = 3;
-        //new Random().nextInt(100);
+        // int userId = new Random().nextInt(100);
         Channel channel = bootstrap.bind(9000 + userId).sync().channel();
-        channel.writeAndFlush(Message.builder().msg(roomId).userId(userId).cmd(NetworkCMD.REGISTER).build()).sync();
+        //channel.writeAndFlush(Message.builder().msg(roomId).userId(userId).cmd(NetworkCMD.REGISTER).build()).sync();
 
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
 
-        while (true) {
-            String msg;
-            if ((msg = bufferedReader.readLine()) != null) {
-                if (msg.equals("quit")) {
-                    channel.writeAndFlush(Message.builder().msg(roomId).userId(userId).cmd(NetworkCMD.CLOSE).build()).channel().closeFuture().await(3000);
-                    group.shutdownGracefully();
-                    break;
-                }
-                channel.writeAndFlush(Message.builder().msg(roomId).data(msg).userId(userId).cmd(NetworkCMD.MSG).build()).sync();
-            }
-        }
+        group.scheduleAtFixedRate(() -> {
+            channel.writeAndFlush(Message.builder().msg(roomId).userId(userId).cmd(NetworkCMD.HEART_BLOOD).build());
+        }, 200, 200, TimeUnit.MILLISECONDS);
+
+//        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
+//
+//        while (true) {
+//            String msg;
+//            if ((msg = bufferedReader.readLine()) != null) {
+//                if (msg.equals("quit")) {
+//                    channel.writeAndFlush(Message.builder().msg(roomId).userId(userId).cmd(NetworkCMD.CLOSE).build()).channel().closeFuture().await(3000);
+//                    group.shutdownGracefully();
+//                    break;
+//                }
+//                channel.writeAndFlush(Message.builder().msg(roomId).data(msg).userId(userId).cmd(NetworkCMD.MSG).build()).sync();
+//            }
+//        }
 
 
         channel.closeFuture().sync();
@@ -82,7 +99,7 @@ public class UDPClientTest {
 
     private static class MyUdpEncoder extends MessageToMessageEncoder<Message> {
         //这里是广播的地址和端口
-        private InetSocketAddress remoteAddress = new InetSocketAddress("localhost", 9001);
+        private InetSocketAddress remoteAddress = new InetSocketAddress("hxiao.bid", 9001);
 
         @Override
         protected void encode(ChannelHandlerContext channelHandlerContext, Message msg, List<Object> list) {

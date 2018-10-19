@@ -63,6 +63,10 @@ public class ServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
                 ctx.writeAndFlush(p);
             });
         }
+        if (message.getCmd() == NetworkCMD.HEART_BLOOD) {
+            DatagramPacket p = new DatagramPacket(Unpooled.copiedBuffer(JsonUtil.serialize(Message.builder().cmd(NetworkCMD.HEART_BLOOD).msg("PONG").build()), CharsetUtil.UTF_8), msg.sender());
+            ctx.writeAndFlush(p);
+        }
 
     }
 
