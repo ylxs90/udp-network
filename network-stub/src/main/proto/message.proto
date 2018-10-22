@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+
+message Message {
+
+	CMD cmd = 1;
+	uint64 id = 2;
+	int32 userId = 3;
+	string msg = 4;
+	string data = 5;
+
+	enum CMD {
+		NONE = 0;
+		REGISTER = 1;
+		HEART_BLOOD = 2;
+		MESSAGE = 3;
+		CLOSE = 4;
+		CLIENT_INFO = 5;
+	}
+}

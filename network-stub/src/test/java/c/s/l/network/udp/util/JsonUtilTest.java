@@ -16,7 +16,7 @@ public class JsonUtilTest {
     @Test
     public void test() {
 
-        Message msg = Message.builder().cmd(1).data("123").build();
+        Message msg = Message.builder().cmd((byte) 1).data("123").build();
         String json = JsonUtil.serialize(msg);
         System.out.println(json);
         Message deserialize = JsonUtil.deserialize(json, Message.class);
