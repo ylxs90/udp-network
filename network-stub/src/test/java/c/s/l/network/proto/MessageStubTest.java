@@ -5,12 +5,12 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-public class MessageOuterClassTest {
+public class MessageStubTest {
 
     @Test
     public void test() throws IOException {
-        MessageOuterClass.Message message = MessageOuterClass.Message.newBuilder()
-                .setCmd(MessageOuterClass.Message.CMD.CLOSE)
+        MessageStub.Message message = MessageStub.Message.newBuilder()
+                .setCmd(MessageStub.Message.CMD.CLOSE)
                 .setUserId(123)
                 .setMsg("hello")
                 .setData("hello").build();
@@ -21,7 +21,7 @@ public class MessageOuterClassTest {
         String json = printer.print(message);
         System.out.println();
         System.out.println(json);
-        MessageOuterClass.Message.Builder builder = MessageOuterClass.Message.newBuilder();
+        MessageStub.Message.Builder builder = MessageStub.Message.newBuilder();
         JsonFormat.parser().merge(json, builder);
         System.out.println(builder.build());
 

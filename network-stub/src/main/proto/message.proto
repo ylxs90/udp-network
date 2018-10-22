@@ -1,5 +1,8 @@
 syntax = "proto3";
 
+option java_package = "c.s.l.network.proto";
+option java_outer_classname = "MessageStub";
+
 
 message Message {
 
