@@ -12,5 +12,6 @@ public class ServerUDPDecoder extends MessageToMessageDecoder<MessageStub.Messag
     @Override
     protected void decode(ChannelHandlerContext ctx, MessageStub.Message msg, List<Object> out) {
         System.out.println(msg);
+
     }
 }

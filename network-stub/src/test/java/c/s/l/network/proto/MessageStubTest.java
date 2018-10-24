@@ -1,9 +1,13 @@
 package c.s.l.network.proto;
 
 import com.google.protobuf.util.JsonFormat;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToMessageDecoder;
+import io.netty.util.internal.TypeParameterMatcher;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.List;
 
 public class MessageStubTest {
 
@@ -25,6 +29,22 @@ public class MessageStubTest {
         JsonFormat.parser().merge(json, builder);
         System.out.println(builder.build());
 
+    }
+
+    @Test
+    public void test2() {
+        class Mydecoder extends MessageToMessageDecoder<String> {
+
+            @Override
+            protected void decode(ChannelHandlerContext ctx, String msg, List<Object> out) {
+
+            }
+        }
+        Mydecoder mydecoder = new Mydecoder();
+        TypeParameterMatcher matcher = TypeParameterMatcher.find(mydecoder, MessageToMessageDecoder.class, "I");
+        System.out.println(matcher);
+        System.out.println(matcher.match("hello"));
+        System.out.println(matcher.match(123));
     }
 
 }
